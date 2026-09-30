@@ -1,0 +1,17 @@
+/* OnlineCAD extension bootstrap
+   Stable core: index.html + style.css + app.js
+   New features should be isolated under /modules and loaded here.
+   A module failure must not stop the core application. */
+window.OnlineCADExtensions=window.OnlineCADExtensions||{};
+window.OnlineCADLoadModule=function(src){
+  return new Promise(resolve=>{
+    const s=document.createElement("script");
+    s.src=src;
+    s.async=false;
+    s.onload=()=>resolve({src,ok:true});
+    s.onerror=()=>{console.warn("OnlineCAD module skipped:",src);resolve({src,ok:false})};
+    document.head.appendChild(s);
+  });
+};
+// Add future optional modules here, one per feature.
+// Example: OnlineCADLoadModule("modules/offset.js?v=1");
