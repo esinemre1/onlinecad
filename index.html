@@ -4,14 +4,25 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>OnlineCAD</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;font-family:Arial,sans-serif;background:#202326;color:#eee}
-#top{height:48px;display:flex;align-items:center;gap:6px;padding:6px 10px;background:#303438;border-bottom:1px solid #111}
-.brand{font-weight:800;color:#ff9f1c;margin-right:12px}.btn{border:1px solid #555;background:#3d4247;color:#eee;border-radius:4px;padding:7px 10px;cursor:pointer}.btn:hover,.btn.active{background:#e98a0c;color:#111;border-color:#ffad33}
-#wrap{display:flex;height:calc(100% - 72px)}#side{width:220px;background:#292d31;border-right:1px solid #111;padding:10px}.section{font-size:12px;color:#aaa;margin:10px 0 6px}.tool{width:100%;text-align:left;margin:2px 0}
-#stage{position:relative;flex:1;background:#151719}canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}
-#status{height:24px;background:#303438;border-top:1px solid #111;display:flex;align-items:center;gap:18px;padding:0 10px;font-size:12px}
-#hint{position:absolute;left:12px;bottom:12px;background:#000a;padding:7px 10px;border-radius:4px;font-size:12px;pointer-events:none}
+:root{--bg:#17191c;--panel:#24272b;--panel2:#2d3136;--line:#3b4046;--muted:#9ba3ad;--text:#eef1f4;--accent:#f39a20;--accent2:#ffb44c}
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text);user-select:none}
+body{display:flex;flex-direction:column}
+#top{height:56px;display:flex;align-items:center;gap:5px;padding:7px 10px;background:linear-gradient(#30343a,#292d31);border-bottom:1px solid #111;box-shadow:0 2px 10px #0005;z-index:5;overflow-x:auto;scrollbar-width:none}
+#top::-webkit-scrollbar{display:none}.brand{height:40px;display:flex;align-items:center;padding:0 14px 0 9px;margin-right:5px;border-right:1px solid #484d53;font-size:15px;font-weight:900;letter-spacing:.7px;white-space:nowrap}.brand:before{content:"◆";color:var(--accent);font-size:17px;margin-right:8px}.brand{color:#fff}
+.btn{height:34px;border:1px solid #4a5057;background:linear-gradient(#3c4147,#34393e);color:#e9edf1;border-radius:5px;padding:0 11px;cursor:pointer;font-size:12px;font-weight:600;box-shadow:inset 0 1px #ffffff0c;white-space:nowrap;transition:.12s}
+.btn:hover{background:#454b52;border-color:#60676f}.btn.active{background:linear-gradient(#f7a62f,#e68b11);border-color:#ffb64c;color:#17191c;box-shadow:0 0 0 1px #0005,inset 0 1px #ffd995}
+#wrap{display:flex;min-height:0;flex:1}#side{width:224px;flex:0 0 224px;background:linear-gradient(90deg,#262a2e,#23262a);border-right:1px solid #0e0f10;padding:0 9px 10px;box-shadow:3px 0 10px #0003;z-index:3}
+#side>b{display:block;height:44px;line-height:44px;padding-left:5px;border-bottom:1px solid #3b4045;font-size:13px;letter-spacing:.4px}
+.section{font-size:10px;font-weight:800;letter-spacing:1.1px;color:#858e98;margin:14px 5px 7px}.tool{width:100%;height:38px;text-align:left;margin:2px 0;padding-left:12px;border-color:transparent;background:transparent;box-shadow:none}.tool:hover{background:#34393f}.tool.active{background:#3a3328;color:#ffb348;border-color:#62471f;box-shadow:inset 3px 0 var(--accent)}
+#side label{display:flex;align-items:center;gap:7px;padding:8px 7px;font-size:12px;color:#d2d6da}#side input{accent-color:var(--accent)}
+#side small{display:block;color:#939ba4;line-height:1.75;padding:5px 7px;border:1px solid #373c41;border-radius:6px;background:#1e2124}
+#stage{position:relative;flex:1;min-width:0;background:#151719;overflow:hidden}canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}
+#stage:before{content:"MODEL";position:absolute;right:12px;top:10px;z-index:1;font-size:10px;font-weight:800;letter-spacing:1px;color:#69717a;border:1px solid #343940;border-radius:4px;padding:4px 7px;pointer-events:none}
+#hint{position:absolute;left:14px;bottom:14px;background:#202327e8;border:1px solid #444a50;border-left:3px solid var(--accent);padding:8px 11px;border-radius:4px;font-size:11px;color:#dce0e4;box-shadow:0 4px 14px #0007;pointer-events:none}
+#status{height:27px;flex:0 0 27px;background:#292d31;border-top:1px solid #3d4247;display:flex;align-items:center;gap:0;padding:0 8px;font-size:11px;color:#c5cbd1;z-index:5}
+#status span{height:100%;display:flex;align-items:center;padding:0 14px;border-right:1px solid #3e4348}#mode{color:#ffad36;font-weight:700}#xy{font-variant-numeric:tabular-nums;min-width:205px}
 kbd{background:#444;padding:2px 5px;border-radius:3px}
+@media(max-width:760px){#top{height:50px;padding:5px}.brand{height:36px;font-size:12px;padding-right:9px}.btn{height:32px;padding:0 9px}#side{width:54px;flex-basis:54px;padding:4px}#side>b,.section,#side label,#side small{display:none}.tool{font-size:0;height:42px;text-align:center;padding:0}.tool:first-letter{font-size:18px}.tool:after{font-size:17px}.tool[data-tool="select"]:after{content:"↖"}.tool[data-tool="point"]:after{content:"•"}.tool[data-tool="line"]:after{content:"╱"}.tool[data-tool="poly"]:after{content:"▱"}#status span{padding:0 7px}#xy{min-width:auto}#count{display:none}}
 </style></head>
 <body>
 <div id="top"><div class="brand">ONLINE CAD</div>
