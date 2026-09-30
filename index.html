@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OnlineCAD</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;font-family:Arial,sans-serif;background:#202326;color:#eee}
+#top{height:48px;display:flex;align-items:center;gap:6px;padding:6px 10px;background:#303438;border-bottom:1px solid #111}
+.brand{font-weight:800;color:#ff9f1c;margin-right:12px}.btn{border:1px solid #555;background:#3d4247;color:#eee;border-radius:4px;padding:7px 10px;cursor:pointer}.btn:hover,.btn.active{background:#e98a0c;color:#111;border-color:#ffad33}
+#wrap{display:flex;height:calc(100% - 72px)}#side{width:220px;background:#292d31;border-right:1px solid #111;padding:10px}.section{font-size:12px;color:#aaa;margin:10px 0 6px}.tool{width:100%;text-align:left;margin:2px 0}
+#stage{position:relative;flex:1;background:#151719}canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}
+#status{height:24px;background:#303438;border-top:1px solid #111;display:flex;align-items:center;gap:18px;padding:0 10px;font-size:12px}
+#hint{position:absolute;left:12px;bottom:12px;background:#000a;padding:7px 10px;border-radius:4px;font-size:12px;pointer-events:none}
+kbd{background:#444;padding:2px 5px;border-radius:3px}
+</style></head>
+<body>
+<div id="top"><div class="brand">ONLINE CAD</div>
+<button class="btn" data-tool="select">Seç</button><button class="btn" data-tool="point">Nokta</button>
+<button class="btn" data-tool="line">Çizgi</button><button class="btn" data-tool="poly">Poligon</button>
+<button class="btn" id="undo">↶ Geri</button><button class="btn" id="redo">↷ İleri</button><button class="btn" id="fit">Ekrana Sığdır</button><button class="btn" id="clear">Temizle</button></div>
+<div id="wrap"><aside id="side"><b>Çizim</b><div class="section">ARAÇLAR</div>
+<button class="btn tool" data-tool="select">↖ Seçim</button><button class="btn tool" data-tool="point">• Nokta</button>
+<button class="btn tool" data-tool="line">╱ Çizgi</button><button class="btn tool" data-tool="poly">▱ Poligon</button>
+<div class="section">YAKALAMA</div><label><input id="snap" type="checkbox" checked> Uç / köşe yakala</label>
+<div class="section">KULLANIM</div><small>Orta tuş: kaydır<br>Tekerlek: zoom<br>ESC: komutu iptal<br>Sağ tık: çizimi bitir<br>Delete: seçileni sil</small></aside>
+<main id="stage"><canvas id="c"></canvas><div id="hint">Hazır</div></main></div>
+<div id="status"><span id="mode">Komut: SEÇ</span><span id="xy">X: 0.000 &nbsp; Y: 0.000</span><span id="scale">Zoom: 100%</span><span id="count">Nesne: 0</span></div>
+<script>
+const c=document.querySelector('#c'),ctx=c.getContext('2d'),stage=document.querySelector('#stage');
+let W=0,H=0,dpr=1,tool='select',objects=[],draft=[],selected=null,mouse={x:0,y:0},view={x:0,y:0,s:1},pan=null;
+let undoStack=[],redoStack=[];
+function resize(){dpr=devicePixelRatio||1;W=stage.clientWidth;H=stage.clientHeight;c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';ctx.setTransform(dpr,0,0,dpr,0,0);draw()}
+new ResizeObserver(resize).observe(stage);
+const S=p=>({x:W/2+view.x+p.x*view.s,y:H/2+view.y-p.y*view.s});
+const M=p=>({x:(p.x-W/2-view.x)/view.s,y:-(p.y-H/2-view.y)/view.s});
+function state(){return JSON.stringify(objects)}function checkpoint(){undoStack.push(state());if(undoStack.length>100)undoStack.shift();redoStack=[]}
+function restore(s){objects=JSON.parse(s);selected=null;draw()}
+function snapPoint(p){if(!document.querySelector('#snap').checked)return p;let best=p,bd=10/view.s;for(const o of objects){for(const q of o.pts){let d=Math.hypot(q.x-p.x,q.y-p.y);if(d<bd){bd=d;best={...q}}}}return best}
+function hit(p){let best=null,bd=8/view.s;for(let i=objects.length-1;i>=0;i--){let o=objects[i];for(const q of o.pts){let d=Math.hypot(q.x-p.x,q.y-p.y);if(d<bd){best=i;bd=d}}}return best}
+function grid(){let raw=60/view.s,pow=10**Math.floor(Math.log10(raw)),step=Math.ceil(raw/pow)*pow;ctx.lineWidth=1;ctx.strokeStyle='#24282c';let a=M({x:0,y:H}),b=M({x:W,y:0});ctx.beginPath();for(let x=Math.floor(a.x/step)*step;x<b.x;x+=step){let q=S({x,y:0});ctx.moveTo(q.x,0);ctx.lineTo(q.x,H)}for(let y=Math.floor(a.y/step)*step;y<b.y;y+=step){let q=S({x:0,y});ctx.moveTo(0,q.y);ctx.lineTo(W,q.y)}ctx.stroke();let o=S({x:0,y:0});ctx.strokeStyle='#495057';ctx.beginPath();ctx.moveTo(0,o.y);ctx.lineTo(W,o.y);ctx.moveTo(o.x,0);ctx.lineTo(o.x,H);ctx.stroke()}
+function path(pts,closed=false,stroke='#e9ecef'){if(!pts.length)return;ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.beginPath();let a=S(pts[0]);ctx.moveTo(a.x,a.y);for(let i=1;i<pts.length;i++){let q=S(pts[i]);ctx.lineTo(q.x,q.y)}if(closed)ctx.closePath();ctx.stroke()}
+function draw(){ctx.clearRect(0,0,W,H);grid();objects.forEach((o,i)=>{path(o.pts,o.type==='poly',i===selected?'#ff9f1c':'#e9ecef');if(o.type==='point'){let q=S(o.pts[0]);ctx.fillStyle=i===selected?'#ff9f1c':'#e9ecef';ctx.beginPath();ctx.arc(q.x,q.y,3,0,7);ctx.fill()}});if(draft.length){let p=[...draft,snapPoint(M(mouse))];path(p,false,'#ff9f1c')}document.querySelector('#count').textContent='Nesne: '+objects.length;document.querySelector('#scale').textContent='Zoom: '+Math.round(view.s*100)+'%'}
+function setTool(t){tool=t;draft=[];selected=null;document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===t));document.querySelector('#mode').textContent='Komut: '+({select:'SEÇ',point:'NOKTA',line:'ÇİZGİ',poly:'POLİGON'}[t]);document.querySelector('#hint').textContent=t==='select'?'Nesne seçin':'Sol tık: nokta gir • ESC: iptal';draw()}
+document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
+c.addEventListener('mousedown',e=>{mouse={x:e.offsetX,y:e.offsetY};if(e.button===1){pan={x:e.clientX,y:e.clientY,vx:view.x,vy:view.y};return}if(e.button!==0)return;let p=snapPoint(M(mouse));if(tool==='select'){selected=hit(p);draw();return}if(tool==='point'){checkpoint();objects.push({type:'point',pts:[p]});draw();return}draft.push(p);if(tool==='line'&&draft.length===2){checkpoint();objects.push({type:'line',pts:[...draft]});draft=[]}draw()});
+window.addEventListener('mousemove',e=>{let r=c.getBoundingClientRect();mouse={x:e.clientX-r.left,y:e.clientY-r.top};if(pan){view.x=pan.vx+e.clientX-pan.x;view.y=pan.vy+e.clientY-pan.y}let p=M(mouse);document.querySelector('#xy').innerHTML='X: '+p.x.toFixed(3)+' &nbsp; Y: '+p.y.toFixed(3);draw()});
+window.addEventListener('mouseup',e=>{if(e.button===1)pan=null});
+c.addEventListener('wheel',e=>{e.preventDefault();let before=M({x:e.offsetX,y:e.offsetY}),f=e.deltaY<0?1.12:1/1.12;view.s=Math.max(.02,Math.min(100,view.s*f));let after=S(before);view.x+=e.offsetX-after.x;view.y+=e.offsetY-after.y;draw()},{passive:false});
+c.addEventListener('contextmenu',e=>{e.preventDefault();if(tool==='poly'&&draft.length>=3){checkpoint();objects.push({type:'poly',pts:[...draft]});draft=[];draw()}else draft=[]});
+window.addEventListener('keydown',e=>{if(e.key==='Escape'){draft=[];selected=null;draw()}if(e.key==='Delete'&&selected!=null){checkpoint();objects.splice(selected,1);selected=null;draw()}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z')document.querySelector('#undo').click()});
+document.querySelector('#undo').onclick=()=>{if(!undoStack.length)return;redoStack.push(state());restore(undoStack.pop())};
+document.querySelector('#redo').onclick=()=>{if(!redoStack.length)return;undoStack.push(state());restore(redoStack.pop())};
+document.querySelector('#clear').onclick=()=>{if(objects.length){checkpoint();objects=[];selected=null;draw()}};
+document.querySelector('#fit').onclick=()=>{let pts=objects.flatMap(o=>o.pts);if(!pts.length){view={x:0,y:0,s:1};draw();return}let xs=pts.map(p=>p.x),ys=pts.map(p=>p.y),minx=Math.min(...xs),maxx=Math.max(...xs),miny=Math.min(...ys),maxy=Math.max(...ys);view.s=Math.min((W-80)/Math.max(1,maxx-minx),(H-80)/Math.max(1,maxy-miny));view.x=-(minx+maxx)/2*view.s;view.y=(miny+maxy)/2*view.s;draw()};
+setTool('select');resize();
+</script></body></html>
