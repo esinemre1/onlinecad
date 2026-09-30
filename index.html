@@ -25,7 +25,39 @@ let map=L.map("map",{zoomControl:true,preferCanvas:true}).setView([38.9,32.5],7)
 let sat=L.tileLayer("https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",{subdomains:"0123",maxZoom:21,attribution:"Google"}).addTo(map);
 const WMS_URL="https://tucbs-public-api.csb.gov.tr/pafta_lejand_wms";
 let wmsOpacity=.9,paftaScale="1000";
-let wms=L.tileLayer.wms(WMS_URL,{layers:"0",styles:"",format:"image/png",transparent:true,version:"1.1.1",opacity:wmsOpacity,tiled:true,uppercase:true});
+let wms=null,wmsLayers=[],wmsReady=false;
+async function discoverWMS(){
+ const hint=document.getElementById("hint");
+ hint.textContent="Pafta servisi katmanları okunuyor...";
+ try{
+  const u=WMS_URL+(WMS_URL.includes("?")?"&":"?")+"SERVICE=WMS&REQUEST=GetCapabilities&_="+Date.now();
+  const res=await fetch(u,{mode:"cors"});
+  if(!res.ok)throw new Error("HTTP "+res.status);
+  const xml=new DOMParser().parseFromString(await res.text(),"text/xml");
+  if(xml.querySelector("parsererror"))throw new Error("Geçersiz WMS XML");
+  wmsLayers=[...xml.querySelectorAll("Layer")].map(n=>({
+   name:n.querySelector(":scope > Name")?.textContent?.trim()||"",
+   title:n.querySelector(":scope > Title")?.textContent?.trim()||""
+  })).filter(x=>x.name);
+  if(!wmsLayers.length)throw new Error("Katman bulunamadı");
+  wmsReady=true;hint.textContent="Pafta servisi hazır • "+wmsLayers.length+" katman bulundu";
+  selectScaleLayer(paftaScale,false);
+ }catch(e){wmsReady=false;hint.textContent="Pafta GetCapabilities okunamadı: "+e.message;console.error("WMS",e)}
+}
+function findScaleLayer(scale){
+ const tests=[new RegExp("(^|[^0-9])1[\\s:/.]*"+scale+"([^0-9]|$)","i"),new RegExp("(^|[^0-9])"+scale+"([^0-9]|$)","i")];
+ return wmsLayers.find(x=>tests.some(r=>r.test(x.name+" "+x.title)))||null;
+}
+function selectScaleLayer(scale,show=true){
+ paftaScale=String(scale);const hit=findScaleLayer(paftaScale);
+ if(!hit){if(show)document.getElementById("hint").textContent="Serviste 1/"+paftaScale+" ile eşleşen pafta katmanı bulunamadı";wmsUI();return false}
+ const wasOn=wmsOn;if(wms&&map.hasLayer(wms))map.removeLayer(wms);
+ wms=L.tileLayer.wms(WMS_URL,{layers:hit.name,styles:"",format:"image/png",transparent:true,version:"1.1.1",opacity:wmsOpacity});
+ 
+ if(wasOn)wms.addTo(map);
+ if(show)document.getElementById("hint").textContent="Pafta katmanı: "+hit.title+" ["+hit.name+"]";
+ wmsUI();return true
+}
 let satOn=true,wmsOn=false,tool="select",objects=[],draft=[],selected=null,undo=[],redo=[],mouse=null,dpr=1;
 function size(){dpr=devicePixelRatio||1;let r=stage.getBoundingClientRect();canvas.width=r.width*dpr;canvas.height=r.height*dpr;canvas.style.width=r.width+"px";canvas.style.height=r.height+"px";ctx.setTransform(dpr,0,0,dpr,0,0);draw()}
 new ResizeObserver(()=>{size();map.invalidateSize()}).observe(stage);
@@ -44,10 +76,10 @@ canvas.addEventListener("contextmenu",e=>{e.preventDefault();if(tool==="poly"&&d
 map.on("move zoom resize",draw);map.on("mousemove",e=>{document.getElementById("coord").innerHTML="Enlem: "+e.latlng.lat.toFixed(7)+" &nbsp; Boylam: "+e.latlng.lng.toFixed(7)});
 document.getElementById("sat").onclick=()=>{satOn=!satOn;if(satOn)sat.addTo(map);else map.removeLayer(sat);document.getElementById("sat").classList.toggle("active",satOn);document.getElementById("badge").textContent=wmsOn?(satOn?"UYDU + PAFTA WMS":"PAFTA WMS"):(satOn?"GOOGLE UYDU":"ALTLIK KAPALI")};
 function wmsUI(){document.getElementById("wmsScaleText").textContent="1/"+paftaScale;document.getElementById("wms").classList.toggle("active",wmsOn);document.getElementById("wmsState").textContent=wmsOn?"Açık":"Kapalı";document.getElementById("wmsOpacity").textContent=Math.round(wmsOpacity*100)+"%";document.getElementById("badge").textContent=wmsOn?(satOn?"UYDU + PAFTA":"PAFTA"):(satOn?"GOOGLE UYDU":"ALTLIK KAPALI")}
-document.getElementById("wms").onclick=()=>{wmsOn=!wmsOn;if(wmsOn){wms.setOpacity(wmsOpacity);wms.addTo(map);wms.bringToFront();document.getElementById("hint").textContent="Pafta katmanı açıldı • Yakınlaşarak pafta çizgilerini kontrol et"}else map.removeLayer(wms);wmsUI()};
-document.getElementById("paftaScale").onchange=e=>{paftaScale=e.target.value;wms.setParams({scale:paftaScale,SCALE:paftaScale});if(wmsOn)wms.redraw();document.getElementById("hint").textContent="Pafta ölçeği: 1/"+paftaScale;wmsUI()};
-document.getElementById("wmsLess").onclick=()=>{wmsOpacity=Math.max(.1,wmsOpacity-.1);wms.setOpacity(wmsOpacity);wmsUI()};
-document.getElementById("wmsMore").onclick=()=>{wmsOpacity=Math.min(1,wmsOpacity+.1);wms.setOpacity(wmsOpacity);wmsUI()};
+document.getElementById("wms").onclick=async()=>{if(!wmsReady)await discoverWMS();if(!wmsReady)return;if(!wms&& !selectScaleLayer(paftaScale))return;wmsOn=!wmsOn;if(wmsOn){if(!selectScaleLayer(paftaScale)) {wmsOn=false;return}wms.addTo(map);wms.bringToFront()}else if(wms&&map.hasLayer(wms))map.removeLayer(wms);wmsUI()};
+document.getElementById("paftaScale").onchange=e=>{selectScaleLayer(e.target.value)};
+document.getElementById("wmsLess").onclick=()=>{wmsOpacity=Math.max(.1,wmsOpacity-.1);if(wms)wms.setOpacity(wmsOpacity);wmsUI()};
+document.getElementById("wmsMore").onclick=()=>{wmsOpacity=Math.min(1,wmsOpacity+.1);if(wms)wms.setOpacity(wmsOpacity);wmsUI()};
 document.getElementById("fit").onclick=()=>map.setView([39,35],6);
 document.getElementById("undo").onclick=()=>{if(!undo.length)return;redo.push(JSON.stringify(objects));objects=JSON.parse(undo.pop());selected=null;draw()};
 document.getElementById("redo").onclick=()=>{if(!redo.length)return;undo.push(JSON.stringify(objects));objects=JSON.parse(redo.pop());selected=null;draw()};
@@ -57,6 +89,6 @@ sat.on("tileerror",()=>{document.getElementById("hint").textContent="Uydu karola
 wms.on("loading",()=>{if(wmsOn)document.getElementById("hint").textContent="Pafta WMS yükleniyor..."});
 wms.on("load",()=>{if(wmsOn)document.getElementById("hint").textContent="Pafta WMS yüklendi"});
 wms.on("tileerror",()=>{document.getElementById("hint").textContent="Pafta servisi görüntü vermedi • WMS layer/CRS kontrolü gerekli"});
-size();setTool("select");
+size();setTool("select");discoverWMS();
 })();
 </script></body></html>
