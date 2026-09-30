@@ -12,8 +12,8 @@ body{display:flex;flex-direction:column}.top{height:52px;display:flex;align-item
 </style>
 </head>
 <body>
-<div class="top"><div class="brand"><b>◆</b> ONLINECAD</div><button class="btn active" id="sat">🛰 Uydu</button><button class="btn" id="wms">▦ Pafta WMS</button><button class="btn" id="fit">⌂ Türkiye</button><button class="btn" id="undo">↶ Geri</button><button class="btn" id="redo">↷ İleri</button><button class="btn" id="clear">Temizle</button></div>
-<div class="main"><aside class="side"><h3>ÇİZİM ARAÇLARI</h3><button class="btn active" id="sel">↖ Seç</button><button class="btn" id="pt">• Nokta</button><button class="btn" id="ln">╱ Çizgi</button><button class="btn" id="pg">▱ Poligon</button><div class="sec">YAKALAMA</div><label><input id="snap" type="checkbox" checked> Köşe yakala</label><div class="sec">KULLANIM</div><label>Harita: sürükle / tekerlek<br>Çizim: araç seç<br>ESC: iptal<br>Sağ tık: poligon bitir</label></aside>
+<div class="top"><div class="brand"><b>◆</b> ONLINECAD</div><button class="btn active" id="sat">🛰 Uydu</button><button class="btn" id="wms">▦ Pafta</button><button class="btn" id="wmsLess">−</button><button class="btn" id="wmsMore">+</button><button class="btn" id="fit">⌂ Türkiye</button><button class="btn" id="undo">↶ Geri</button><button class="btn" id="redo">↷ İleri</button><button class="btn" id="clear">Temizle</button></div>
+<div class="main"><aside class="side"><h3>ÇİZİM ARAÇLARI</h3><button class="btn active" id="sel">↖ Seç</button><button class="btn" id="pt">• Nokta</button><button class="btn" id="ln">╱ Çizgi</button><button class="btn" id="pg">▱ Poligon</button><div class="sec">PAFTA KATMANI</div><label><span id="wmsState">Kapalı</span><br>Şeffaflık: <b id="wmsOpacity">90%</b></label><div class="sec">YAKALAMA</div><label><input id="snap" type="checkbox" checked> Köşe yakala</label><div class="sec">KULLANIM</div><label>Harita: sürükle / tekerlek<br>Çizim: araç seç<br>ESC: iptal<br>Sağ tık: poligon bitir</label></aside>
 <main class="stage" id="stage"><div id="map" class="map"></div><canvas id="cad" class="cad"></canvas><div class="badge" id="badge">GOOGLE UYDU</div><div class="hint" id="hint">Haritayı gezdirebilirsin</div><div class="err" id="err"></div></main></div>
 <div class="status"><span class="orange" id="mode">HARİTA / SEÇ</span><span id="coord">Enlem: - &nbsp; Boylam: -</span><span class="obj" id="count">Nesne: 0</span></div>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -23,7 +23,9 @@ const err=document.getElementById("err"),canvas=document.getElementById("cad"),c
 if(typeof L==="undefined"){err.style.display="block";err.innerHTML="<b>Harita kütüphanesi yüklenemedi.</b><br>İnternet/CDN erişimini kontrol et.";return}
 let map=L.map("map",{zoomControl:true,preferCanvas:true}).setView([38.9,32.5],7);
 let sat=L.tileLayer("https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",{subdomains:"0123",maxZoom:21,attribution:"Google"}).addTo(map);
-let wms=L.tileLayer.wms("https://tucbs-public-api.csb.gov.tr/pafta_lejand_wms",{layers:"0",format:"image/png",transparent:true,version:"1.1.1",opacity:.9});
+const WMS_URL="https://tucbs-public-api.csb.gov.tr/pafta_lejand_wms";
+let wmsOpacity=.9;
+let wms=L.tileLayer.wms(WMS_URL,{layers:"0",styles:"",format:"image/png",transparent:true,version:"1.1.1",opacity:wmsOpacity,tiled:true,uppercase:true});
 let satOn=true,wmsOn=false,tool="select",objects=[],draft=[],selected=null,undo=[],redo=[],mouse=null,dpr=1;
 function size(){dpr=devicePixelRatio||1;let r=stage.getBoundingClientRect();canvas.width=r.width*dpr;canvas.height=r.height*dpr;canvas.style.width=r.width+"px";canvas.style.height=r.height+"px";ctx.setTransform(dpr,0,0,dpr,0,0);draw()}
 new ResizeObserver(()=>{size();map.invalidateSize()}).observe(stage);
@@ -41,14 +43,19 @@ canvas.addEventListener("click",e=>{let p=snapLL(ll(e.offsetX,e.offsetY));if(too
 canvas.addEventListener("contextmenu",e=>{e.preventDefault();if(tool==="poly"&&draft.length>=3){checkpoint();objects.push({type:"poly",pts:[...draft]});draft=[]}else draft=[];draw()});
 map.on("move zoom resize",draw);map.on("mousemove",e=>{document.getElementById("coord").innerHTML="Enlem: "+e.latlng.lat.toFixed(7)+" &nbsp; Boylam: "+e.latlng.lng.toFixed(7)});
 document.getElementById("sat").onclick=()=>{satOn=!satOn;if(satOn)sat.addTo(map);else map.removeLayer(sat);document.getElementById("sat").classList.toggle("active",satOn);document.getElementById("badge").textContent=wmsOn?(satOn?"UYDU + PAFTA WMS":"PAFTA WMS"):(satOn?"GOOGLE UYDU":"ALTLIK KAPALI")};
-document.getElementById("wms").onclick=()=>{wmsOn=!wmsOn;if(wmsOn)wms.addTo(map);else map.removeLayer(wms);document.getElementById("wms").classList.toggle("active",wmsOn);document.getElementById("badge").textContent=wmsOn?(satOn?"UYDU + PAFTA WMS":"PAFTA WMS"):(satOn?"GOOGLE UYDU":"ALTLIK KAPALI")};
+function wmsUI(){document.getElementById("wms").classList.toggle("active",wmsOn);document.getElementById("wmsState").textContent=wmsOn?"Açık":"Kapalı";document.getElementById("wmsOpacity").textContent=Math.round(wmsOpacity*100)+"%";document.getElementById("badge").textContent=wmsOn?(satOn?"UYDU + PAFTA":"PAFTA"):(satOn?"GOOGLE UYDU":"ALTLIK KAPALI")}
+document.getElementById("wms").onclick=()=>{wmsOn=!wmsOn;if(wmsOn){wms.setOpacity(wmsOpacity);wms.addTo(map);wms.bringToFront();document.getElementById("hint").textContent="Pafta katmanı açıldı • Yakınlaşarak pafta çizgilerini kontrol et"}else map.removeLayer(wms);wmsUI()};
+document.getElementById("wmsLess").onclick=()=>{wmsOpacity=Math.max(.1,wmsOpacity-.1);wms.setOpacity(wmsOpacity);wmsUI()};
+document.getElementById("wmsMore").onclick=()=>{wmsOpacity=Math.min(1,wmsOpacity+.1);wms.setOpacity(wmsOpacity);wmsUI()};
 document.getElementById("fit").onclick=()=>map.setView([39,35],6);
 document.getElementById("undo").onclick=()=>{if(!undo.length)return;redo.push(JSON.stringify(objects));objects=JSON.parse(undo.pop());selected=null;draw()};
 document.getElementById("redo").onclick=()=>{if(!redo.length)return;undo.push(JSON.stringify(objects));objects=JSON.parse(redo.pop());selected=null;draw()};
 document.getElementById("clear").onclick=()=>{if(objects.length){checkpoint();objects=[];draft=[];selected=null;draw()}};
 window.addEventListener("keydown",e=>{if(e.key==="Escape"){draft=[];selected=null;draw()}if(e.key==="Delete"&&selected!==null){checkpoint();objects.splice(selected,1);selected=null;draw()}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z")document.getElementById("undo").click()});
 sat.on("tileerror",()=>{document.getElementById("hint").textContent="Uydu karoları yüklenemedi • bağlantı/servis erişimini kontrol et"});
-wms.on("tileerror",()=>{document.getElementById("hint").textContent="Pafta WMS yanıt vermedi veya layer adı uyumsuz"});
+wms.on("loading",()=>{if(wmsOn)document.getElementById("hint").textContent="Pafta WMS yükleniyor..."});
+wms.on("load",()=>{if(wmsOn)document.getElementById("hint").textContent="Pafta WMS yüklendi"});
+wms.on("tileerror",()=>{document.getElementById("hint").textContent="Pafta servisi görüntü vermedi • WMS layer/CRS kontrolü gerekli"});
 size();setTool("select");
 })();
 </script></body></html>
