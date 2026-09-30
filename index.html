@@ -1,87 +1,54 @@
 <!doctype html>
 <html lang="tr">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
 <title>OnlineCAD</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <style>
-:root{--bg:#17191c;--panel:#24272b;--panel2:#2d3136;--line:#3b4046;--muted:#9ba3ad;--text:#eef1f4;--accent:#f39a20;--accent2:#ffb44c}
-*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text);user-select:none}
-body{display:flex;flex-direction:column}
-#top{height:56px;display:flex;align-items:center;gap:5px;padding:7px 10px;background:linear-gradient(#30343a,#292d31);border-bottom:1px solid #111;box-shadow:0 2px 10px #0005;z-index:5;overflow-x:auto;scrollbar-width:none}
-#top::-webkit-scrollbar{display:none}.brand{height:40px;display:flex;align-items:center;padding:0 14px 0 9px;margin-right:5px;border-right:1px solid #484d53;font-size:15px;font-weight:900;letter-spacing:.7px;white-space:nowrap}.brand:before{content:"◆";color:var(--accent);font-size:17px;margin-right:8px}.brand{color:#fff}
-.btn{height:34px;border:1px solid #4a5057;background:linear-gradient(#3c4147,#34393e);color:#e9edf1;border-radius:5px;padding:0 11px;cursor:pointer;font-size:12px;font-weight:600;box-shadow:inset 0 1px #ffffff0c;white-space:nowrap;transition:.12s}
-.btn:hover{background:#454b52;border-color:#60676f}.btn.active{background:linear-gradient(#f7a62f,#e68b11);border-color:#ffb64c;color:#17191c;box-shadow:0 0 0 1px #0005,inset 0 1px #ffd995}
-#wrap{display:flex;min-height:0;flex:1}#side{width:224px;flex:0 0 224px;background:linear-gradient(90deg,#262a2e,#23262a);border-right:1px solid #0e0f10;padding:0 9px 10px;box-shadow:3px 0 10px #0003;z-index:3}
-#side>b{display:block;height:44px;line-height:44px;padding-left:5px;border-bottom:1px solid #3b4045;font-size:13px;letter-spacing:.4px}
-.section{font-size:10px;font-weight:800;letter-spacing:1.1px;color:#858e98;margin:14px 5px 7px}.tool{width:100%;height:38px;text-align:left;margin:2px 0;padding-left:12px;border-color:transparent;background:transparent;box-shadow:none}.tool:hover{background:#34393f}.tool.active{background:#3a3328;color:#ffb348;border-color:#62471f;box-shadow:inset 3px 0 var(--accent)}
-#side label{display:flex;align-items:center;gap:7px;padding:8px 7px;font-size:12px;color:#d2d6da}#side input{accent-color:var(--accent)}
-#side small{display:block;color:#939ba4;line-height:1.75;padding:5px 7px;border:1px solid #373c41;border-radius:6px;background:#1e2124}
-#stage{position:relative;flex:1;min-width:0;background:#151719;overflow:hidden}#map{position:absolute;inset:0;z-index:0;display:none;background:#111}.leaflet-container{background:#111}.leaflet-control-attribution{font-size:9px!important}#mapnote{display:none;position:absolute;right:12px;top:38px;z-index:4;background:#202327dd;border:1px solid #4a5057;border-radius:4px;padding:5px 8px;font-size:10px;color:#d9dde1;pointer-events:none}#stage.map-on #map,#stage.map-on #mapnote{display:block}#stage.map-on canvas{background:transparent}#stage.map-on:before{z-index:4}canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;z-index:2}
-#stage:before{content:"MODEL";position:absolute;right:12px;top:10px;z-index:1;font-size:10px;font-weight:800;letter-spacing:1px;color:#69717a;border:1px solid #343940;border-radius:4px;padding:4px 7px;pointer-events:none}
-#hint{position:absolute;left:14px;bottom:14px;background:#202327e8;border:1px solid #444a50;border-left:3px solid var(--accent);padding:8px 11px;border-radius:4px;font-size:11px;color:#dce0e4;box-shadow:0 4px 14px #0007;pointer-events:none}
-#status{height:27px;flex:0 0 27px;background:#292d31;border-top:1px solid #3d4247;display:flex;align-items:center;gap:0;padding:0 8px;font-size:11px;color:#c5cbd1;z-index:5}
-#status span{height:100%;display:flex;align-items:center;padding:0 14px;border-right:1px solid #3e4348}#mode{color:#ffad36;font-weight:700}#xy{font-variant-numeric:tabular-nums;min-width:205px}
-kbd{background:#444;padding:2px 5px;border-radius:3px}
-@media(max-width:760px){#top{height:50px;padding:5px}.brand{height:36px;font-size:12px;padding-right:9px}.btn{height:32px;padding:0 9px}#side{width:54px;flex-basis:54px;padding:4px}#side>b,.section,#side label,#side small{display:none}.tool{font-size:0;height:42px;text-align:center;padding:0}.tool:first-letter{font-size:18px}.tool:after{font-size:17px}.tool[data-tool="select"]:after{content:"↖"}.tool[data-tool="point"]:after{content:"•"}.tool[data-tool="line"]:after{content:"╱"}.tool[data-tool="poly"]:after{content:"▱"}#status span{padding:0 7px}#xy{min-width:auto}#count{display:none}}
-</style><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;font-family:Segoe UI,Arial,sans-serif;background:#17191c;color:#eee}
+body{display:flex;flex-direction:column}.top{height:52px;display:flex;align-items:center;gap:5px;padding:6px 8px;background:#292d31;border-bottom:1px solid #111;overflow-x:auto;z-index:1001}.brand{font-weight:900;white-space:nowrap;margin-right:8px}.brand b{color:#f39a20}.btn{height:34px;border:1px solid #4b5158;border-radius:5px;background:#373c42;color:#eee;padding:0 10px;font-weight:600;white-space:nowrap;cursor:pointer}.btn:hover{background:#444a51}.btn.active{background:#f39a20;color:#17191c;border-color:#ffb74f}
+.main{display:flex;flex:1;min-height:0}.side{width:190px;background:#24272b;border-right:1px solid #111;padding:9px;z-index:1000}.side h3{font-size:12px;margin:7px 4px 12px}.side .btn{display:block;width:100%;text-align:left;margin:4px 0}.sec{margin:16px 4px 6px;font-size:10px;color:#929aa3;font-weight:800;letter-spacing:1px}.side label{font-size:12px;display:block;padding:7px 4px}.stage{position:relative;flex:1;min-width:0;background:#141619}.map{position:absolute;inset:0;z-index:1}.cad{position:absolute;inset:0;z-index:500;pointer-events:none}.cad.drawmode{pointer-events:auto;cursor:crosshair}.badge{position:absolute;right:12px;top:12px;z-index:700;background:#202327e8;border:1px solid #50565d;border-radius:5px;padding:6px 9px;font-size:10px}.hint{position:absolute;left:12px;bottom:12px;z-index:700;background:#202327e8;border-left:3px solid #f39a20;padding:7px 10px;font-size:11px;border-radius:4px;pointer-events:none}.err{display:none;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:900;background:#2c2020;border:1px solid #a44;padding:14px;border-radius:7px;max-width:420px;text-align:center}.status{height:27px;background:#292d31;border-top:1px solid #40454a;display:flex;align-items:center;font-size:11px;z-index:1001}.status span{padding:0 12px;border-right:1px solid #41464b}.orange{color:#ffad36;font-weight:700}.leaflet-control-attribution{font-size:9px!important}
+@media(max-width:700px){.side{width:54px;padding:5px}.side h3,.side .sec,.side label{display:none}.side .btn{font-size:0;text-align:center;padding:0}.side .btn:before{font-size:18px}.side #sel:before{content:"↖"}.side #pt:before{content:"•"}.side #ln:before{content:"╱"}.side #pg:before{content:"▱"}.brand{font-size:12px}.status span{padding:0 6px}.obj{display:none}}
+</style>
 </head>
 <body>
-<div id="top"><div class="brand">ONLINE CAD</div>
-<button class="btn" data-tool="select">Seç</button><button class="btn" data-tool="point">Nokta</button>
-<button class="btn" data-tool="line">Çizgi</button><button class="btn" data-tool="poly">Poligon</button>
-<button class="btn" id="sat">🛰 Uydu</button><button class="btn" id="wms">▦ Pafta WMS</button><button class="btn" id="undo">↶ Geri</button><button class="btn" id="redo">↷ İleri</button><button class="btn" id="fit">Ekrana Sığdır</button><button class="btn" id="clear">Temizle</button></div>
-<div id="wrap"><aside id="side"><b>Çizim</b><div class="section">ARAÇLAR</div>
-<button class="btn tool" data-tool="select">↖ Seçim</button><button class="btn tool" data-tool="point">• Nokta</button>
-<button class="btn tool" data-tool="line">╱ Çizgi</button><button class="btn tool" data-tool="poly">▱ Poligon</button>
-<div class="section">YAKALAMA</div><label><input id="snap" type="checkbox" checked> Uç / köşe yakala</label>
-<div class="section">KULLANIM</div><small>Orta tuş: kaydır<br>Tekerlek: zoom<br>ESC: komutu iptal<br>Sağ tık: çizimi bitir<br>Delete: seçileni sil</small></aside>
-<main id="stage"><div id="map"></div><canvas id="c"></canvas><div id="mapnote">HARİTA ALTIĞI</div><div id="hint">Hazır</div></main></div>
-<div id="status"><span id="mode">Komut: SEÇ</span><span id="xy">X: 0.000 &nbsp; Y: 0.000</span><span id="scale">Zoom: 100%</span><span id="count">Nesne: 0</span></div>
+<div class="top"><div class="brand"><b>◆</b> ONLINECAD</div><button class="btn active" id="sat">🛰 Uydu</button><button class="btn" id="wms">▦ Pafta WMS</button><button class="btn" id="fit">⌂ Türkiye</button><button class="btn" id="undo">↶ Geri</button><button class="btn" id="redo">↷ İleri</button><button class="btn" id="clear">Temizle</button></div>
+<div class="main"><aside class="side"><h3>ÇİZİM ARAÇLARI</h3><button class="btn active" id="sel">↖ Seç</button><button class="btn" id="pt">• Nokta</button><button class="btn" id="ln">╱ Çizgi</button><button class="btn" id="pg">▱ Poligon</button><div class="sec">YAKALAMA</div><label><input id="snap" type="checkbox" checked> Köşe yakala</label><div class="sec">KULLANIM</div><label>Harita: sürükle / tekerlek<br>Çizim: araç seç<br>ESC: iptal<br>Sağ tık: poligon bitir</label></aside>
+<main class="stage" id="stage"><div id="map" class="map"></div><canvas id="cad" class="cad"></canvas><div class="badge" id="badge">GOOGLE UYDU</div><div class="hint" id="hint">Haritayı gezdirebilirsin</div><div class="err" id="err"></div></main></div>
+<div class="status"><span class="orange" id="mode">HARİTA / SEÇ</span><span id="coord">Enlem: - &nbsp; Boylam: -</span><span class="obj" id="count">Nesne: 0</span></div>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const c=document.querySelector('#c'),ctx=c.getContext('2d'),stage=document.querySelector('#stage');
-let W=0,H=0,dpr=1,tool='select',objects=[],draft=[],selected=null,mouse={x:0,y:0},view={x:0,y:0,s:1},pan=null;
-let undoStack=[],redoStack=[];
-function resize(){dpr=devicePixelRatio||1;W=stage.clientWidth;H=stage.clientHeight;c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';ctx.setTransform(dpr,0,0,dpr,0,0);draw()}
-new ResizeObserver(resize).observe(stage);
-const S=p=>({x:W/2+view.x+p.x*view.s,y:H/2+view.y-p.y*view.s});
-const M=p=>({x:(p.x-W/2-view.x)/view.s,y:-(p.y-H/2-view.y)/view.s});
-function state(){return JSON.stringify(objects)}function checkpoint(){undoStack.push(state());if(undoStack.length>100)undoStack.shift();redoStack=[]}
-function restore(s){objects=JSON.parse(s);selected=null;draw()}
-function snapPoint(p){if(!document.querySelector('#snap').checked)return p;let best=p,bd=10/view.s;for(const o of objects){for(const q of o.pts){let d=Math.hypot(q.x-p.x,q.y-p.y);if(d<bd){bd=d;best={...q}}}}return best}
-function hit(p){let best=null,bd=8/view.s;for(let i=objects.length-1;i>=0;i--){let o=objects[i];for(const q of o.pts){let d=Math.hypot(q.x-p.x,q.y-p.y);if(d<bd){best=i;bd=d}}}return best}
-function grid(){let raw=60/view.s,pow=10**Math.floor(Math.log10(raw)),step=Math.ceil(raw/pow)*pow;ctx.lineWidth=1;ctx.strokeStyle='#24282c';let a=M({x:0,y:H}),b=M({x:W,y:0});ctx.beginPath();for(let x=Math.floor(a.x/step)*step;x<b.x;x+=step){let q=S({x,y:0});ctx.moveTo(q.x,0);ctx.lineTo(q.x,H)}for(let y=Math.floor(a.y/step)*step;y<b.y;y+=step){let q=S({x:0,y});ctx.moveTo(0,q.y);ctx.lineTo(W,q.y)}ctx.stroke();let o=S({x:0,y:0});ctx.strokeStyle='#495057';ctx.beginPath();ctx.moveTo(0,o.y);ctx.lineTo(W,o.y);ctx.moveTo(o.x,0);ctx.lineTo(o.x,H);ctx.stroke()}
-function path(pts,closed=false,stroke='#e9ecef'){if(!pts.length)return;ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.beginPath();let a=S(pts[0]);ctx.moveTo(a.x,a.y);for(let i=1;i<pts.length;i++){let q=S(pts[i]);ctx.lineTo(q.x,q.y)}if(closed)ctx.closePath();ctx.stroke()}
-function draw(){ctx.clearRect(0,0,W,H);grid();objects.forEach((o,i)=>{path(o.pts,o.type==='poly',i===selected?'#ff9f1c':'#e9ecef');if(o.type==='point'){let q=S(o.pts[0]);ctx.fillStyle=i===selected?'#ff9f1c':'#e9ecef';ctx.beginPath();ctx.arc(q.x,q.y,3,0,7);ctx.fill()}});if(draft.length){let p=[...draft,snapPoint(M(mouse))];path(p,false,'#ff9f1c')}document.querySelector('#count').textContent='Nesne: '+objects.length;document.querySelector('#scale').textContent='Zoom: '+Math.round(view.s*100)+'%'}
-function setTool(t){tool=t;draft=[];selected=null;document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===t));document.querySelector('#mode').textContent='Komut: '+({select:'SEÇ',point:'NOKTA',line:'ÇİZGİ',poly:'POLİGON'}[t]);document.querySelector('#hint').textContent=t==='select'?'Nesne seçin':'Sol tık: nokta gir • ESC: iptal';draw()}
-document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
-c.addEventListener('mousedown',e=>{mouse={x:e.offsetX,y:e.offsetY};if(e.button===1){pan={x:e.clientX,y:e.clientY,vx:view.x,vy:view.y};return}if(e.button!==0)return;let p=snapPoint(M(mouse));if(tool==='select'){selected=hit(p);draw();return}if(tool==='point'){checkpoint();objects.push({type:'point',pts:[p]});draw();return}draft.push(p);if(tool==='line'&&draft.length===2){checkpoint();objects.push({type:'line',pts:[...draft]});draft=[]}draw()});
-window.addEventListener('mousemove',e=>{let r=c.getBoundingClientRect();mouse={x:e.clientX-r.left,y:e.clientY-r.top};if(pan){view.x=pan.vx+e.clientX-pan.x;view.y=pan.vy+e.clientY-pan.y}let p=M(mouse);document.querySelector('#xy').innerHTML='X: '+p.x.toFixed(3)+' &nbsp; Y: '+p.y.toFixed(3);draw()});
-window.addEventListener('mouseup',e=>{if(e.button===1)pan=null});
-c.addEventListener('wheel',e=>{e.preventDefault();let before=M({x:e.offsetX,y:e.offsetY}),f=e.deltaY<0?1.12:1/1.12;view.s=Math.max(.02,Math.min(100,view.s*f));let after=S(before);view.x+=e.offsetX-after.x;view.y+=e.offsetY-after.y;draw()},{passive:false});
-c.addEventListener('contextmenu',e=>{e.preventDefault();if(tool==='poly'&&draft.length>=3){checkpoint();objects.push({type:'poly',pts:[...draft]});draft=[];draw()}else draft=[]});
-window.addEventListener('keydown',e=>{if(e.key==='Escape'){draft=[];selected=null;draw()}if(e.key==='Delete'&&selected!=null){checkpoint();objects.splice(selected,1);selected=null;draw()}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z')document.querySelector('#undo').click()});
-document.querySelector('#undo').onclick=()=>{if(!undoStack.length)return;redoStack.push(state());restore(undoStack.pop())};
-document.querySelector('#redo').onclick=()=>{if(!redoStack.length)return;undoStack.push(state());restore(redoStack.pop())};
-document.querySelector('#clear').onclick=()=>{if(objects.length){checkpoint();objects=[];selected=null;draw()}};
-document.querySelector('#fit').onclick=()=>{let pts=objects.flatMap(o=>o.pts);if(!pts.length){view={x:0,y:0,s:1};draw();return}let xs=pts.map(p=>p.x),ys=pts.map(p=>p.y),minx=Math.min(...xs),maxx=Math.max(...xs),miny=Math.min(...ys),maxy=Math.max(...ys);view.s=Math.min((W-80)/Math.max(1,maxx-minx),(H-80)/Math.max(1,maxy-miny));view.x=-(minx+maxx)/2*view.s;view.y=(miny+maxy)/2*view.s;draw()};
-let map=null,satLayer=null,wmsLayer=null,mapMode=false,wmsOn=false;
-function initMap(){
- if(map)return;
- map=L.map('map',{zoomControl:true,attributionControl:true}).setView([39,35],6);
- satLayer=L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{maxZoom:21,attribution:'Uydu © Google'}).addTo(map);
- wmsLayer=L.tileLayer.wms('https://tucbs-public-api.csb.gov.tr/pafta_lejand_wms',{layers:'0',format:'image/png',transparent:true,version:'1.1.1',opacity:.9});
-}
-document.querySelector('#sat').onclick=()=>{
- initMap();mapMode=!mapMode;stage.classList.toggle('map-on',mapMode);document.querySelector('#sat').classList.toggle('active',mapMode);
- document.querySelector('#mapnote').textContent=mapMode?(wmsOn?'GOOGLE UYDU + PAFTA WMS':'GOOGLE UYDU'):'HARİTA ALTIĞI';
- if(mapMode){setTimeout(()=>map.invalidateSize(),50);document.querySelector('#hint').textContent='Uydu altlığı açık • CAD çizimleri üst katmanda';}
- draw();
-};
-document.querySelector('#wms').onclick=()=>{
- initMap();if(!mapMode){mapMode=true;stage.classList.add('map-on');document.querySelector('#sat').classList.add('active');setTimeout(()=>map.invalidateSize(),50)}
- wmsOn=!wmsOn;if(wmsOn)wmsLayer.addTo(map);else map.removeLayer(wmsLayer);
- document.querySelector('#wms').classList.toggle('active',wmsOn);document.querySelector('#mapnote').textContent=wmsOn?'GOOGLE UYDU + PAFTA WMS':'GOOGLE UYDU';
-};
-setTool('select');resize();
+(()=>{"use strict";
+const err=document.getElementById("err"),canvas=document.getElementById("cad"),ctx=canvas.getContext("2d"),stage=document.getElementById("stage");
+if(typeof L==="undefined"){err.style.display="block";err.innerHTML="<b>Harita kütüphanesi yüklenemedi.</b><br>İnternet/CDN erişimini kontrol et.";return}
+let map=L.map("map",{zoomControl:true,preferCanvas:true}).setView([38.9,32.5],7);
+let sat=L.tileLayer("https://mt{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",{subdomains:"0123",maxZoom:21,attribution:"Google"}).addTo(map);
+let wms=L.tileLayer.wms("https://tucbs-public-api.csb.gov.tr/pafta_lejand_wms",{layers:"0",format:"image/png",transparent:true,version:"1.1.1",opacity:.9});
+let satOn=true,wmsOn=false,tool="select",objects=[],draft=[],selected=null,undo=[],redo=[],mouse=null,dpr=1;
+function size(){dpr=devicePixelRatio||1;let r=stage.getBoundingClientRect();canvas.width=r.width*dpr;canvas.height=r.height*dpr;canvas.style.width=r.width+"px";canvas.style.height=r.height+"px";ctx.setTransform(dpr,0,0,dpr,0,0);draw()}
+new ResizeObserver(()=>{size();map.invalidateSize()}).observe(stage);
+function px(ll){let p=map.latLngToContainerPoint([ll.lat,ll.lng]);return{x:p.x,y:p.y}}
+function ll(x,y){let p=map.containerPointToLatLng([x,y]);return{lat:p.lat,lng:p.lng}}
+function checkpoint(){undo.push(JSON.stringify(objects));if(undo.length>100)undo.shift();redo=[]}
+function snapLL(p){if(!document.getElementById("snap").checked)return p;let best=p,bd=12;for(const o of objects)for(const q of o.pts){let a=px(p),b=px(q),d=Math.hypot(a.x-b.x,a.y-b.y);if(d<bd){bd=d;best={...q}}}return best}
+function path(pts,close,color){if(!pts.length)return;ctx.beginPath();let p=px(pts[0]);ctx.moveTo(p.x,p.y);for(let i=1;i<pts.length;i++){p=px(pts[i]);ctx.lineTo(p.x,p.y)}if(close)ctx.closePath();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.stroke()}
+function draw(){ctx.clearRect(0,0,canvas.width/dpr,canvas.height/dpr);objects.forEach((o,i)=>{path(o.pts,o.type==="poly",i===selected?"#ff9f1c":"#00e5ff");if(o.type==="point"){let p=px(o.pts[0]);ctx.fillStyle=i===selected?"#ff9f1c":"#00e5ff";ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fill()}});if(draft.length&&mouse){path([...draft,snapLL(mouse)],false,"#ff9f1c")}document.getElementById("count").textContent="Nesne: "+objects.length}
+function hit(p){let a=px(p),best=null,bd=10;objects.forEach((o,i)=>o.pts.forEach(q=>{let b=px(q),d=Math.hypot(a.x-b.x,a.y-b.y);if(d<bd){bd=d;best=i}}));return best}
+function setTool(t){tool=t;draft=[];selected=null;["sel","pt","ln","pg"].forEach(id=>document.getElementById(id).classList.remove("active"));document.getElementById({select:"sel",point:"pt",line:"ln",poly:"pg"}[t]).classList.add("active");canvas.classList.toggle("drawmode",t!=="select");map.dragging[t==="select"?"enable":"disable"]();map.scrollWheelZoom.enable();document.getElementById("mode").textContent="KOMUT: "+({select:"SEÇ",point:"NOKTA",line:"ÇİZGİ",poly:"POLİGON"}[t]);document.getElementById("hint").textContent=t==="select"?"Haritayı sürükle veya nesne seç":"Sol tık: nokta gir • ESC: iptal";draw()}
+document.getElementById("sel").onclick=()=>setTool("select");document.getElementById("pt").onclick=()=>setTool("point");document.getElementById("ln").onclick=()=>setTool("line");document.getElementById("pg").onclick=()=>setTool("poly");
+canvas.addEventListener("mousemove",e=>{mouse=ll(e.offsetX,e.offsetY);document.getElementById("coord").innerHTML="Enlem: "+mouse.lat.toFixed(7)+" &nbsp; Boylam: "+mouse.lng.toFixed(7);draw()});
+canvas.addEventListener("click",e=>{let p=snapLL(ll(e.offsetX,e.offsetY));if(tool==="select"){selected=hit(p);draw();return}if(tool==="point"){checkpoint();objects.push({type:"point",pts:[p]});draw();return}draft.push(p);if(tool==="line"&&draft.length===2){checkpoint();objects.push({type:"line",pts:[...draft]});draft=[]}draw()});
+canvas.addEventListener("contextmenu",e=>{e.preventDefault();if(tool==="poly"&&draft.length>=3){checkpoint();objects.push({type:"poly",pts:[...draft]});draft=[]}else draft=[];draw()});
+map.on("move zoom resize",draw);map.on("mousemove",e=>{document.getElementById("coord").innerHTML="Enlem: "+e.latlng.lat.toFixed(7)+" &nbsp; Boylam: "+e.latlng.lng.toFixed(7)});
+document.getElementById("sat").onclick=()=>{satOn=!satOn;if(satOn)sat.addTo(map);else map.removeLayer(sat);document.getElementById("sat").classList.toggle("active",satOn);document.getElementById("badge").textContent=wmsOn?(satOn?"UYDU + PAFTA WMS":"PAFTA WMS"):(satOn?"GOOGLE UYDU":"ALTLIK KAPALI")};
+document.getElementById("wms").onclick=()=>{wmsOn=!wmsOn;if(wmsOn)wms.addTo(map);else map.removeLayer(wms);document.getElementById("wms").classList.toggle("active",wmsOn);document.getElementById("badge").textContent=wmsOn?(satOn?"UYDU + PAFTA WMS":"PAFTA WMS"):(satOn?"GOOGLE UYDU":"ALTLIK KAPALI")};
+document.getElementById("fit").onclick=()=>map.setView([39,35],6);
+document.getElementById("undo").onclick=()=>{if(!undo.length)return;redo.push(JSON.stringify(objects));objects=JSON.parse(undo.pop());selected=null;draw()};
+document.getElementById("redo").onclick=()=>{if(!redo.length)return;undo.push(JSON.stringify(objects));objects=JSON.parse(redo.pop());selected=null;draw()};
+document.getElementById("clear").onclick=()=>{if(objects.length){checkpoint();objects=[];draft=[];selected=null;draw()}};
+window.addEventListener("keydown",e=>{if(e.key==="Escape"){draft=[];selected=null;draw()}if(e.key==="Delete"&&selected!==null){checkpoint();objects.splice(selected,1);selected=null;draw()}if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z")document.getElementById("undo").click()});
+sat.on("tileerror",()=>{document.getElementById("hint").textContent="Uydu karoları yüklenemedi • bağlantı/servis erişimini kontrol et"});
+wms.on("tileerror",()=>{document.getElementById("hint").textContent="Pafta WMS yanıt vermedi veya layer adı uyumsuz"});
+size();setTool("select");
+})();
 </script></body></html>
