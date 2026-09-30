@@ -15,3 +15,4 @@ window.OnlineCADLoadModule=function(src){
 };
 OnlineCADLoadModule("modules/drawing-tools.js?v=1");
 OnlineCADLoadModule("modules/survey-drawing.js?v=1");
+OnlineCADLoadModule("modules/survey-geometry.js?v=1");
