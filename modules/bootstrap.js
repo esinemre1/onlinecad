@@ -13,5 +13,4 @@ window.OnlineCADLoadModule=function(src){
     document.head.appendChild(s);
   });
 };
-// Add future optional modules here, one per feature.
-// Example: OnlineCADLoadModule("modules/offset.js?v=1");
+OnlineCADLoadModule("modules/drawing-tools.js?v=1");
