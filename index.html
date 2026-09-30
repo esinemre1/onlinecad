@@ -16,25 +16,27 @@ body{display:flex;flex-direction:column}
 .section{font-size:10px;font-weight:800;letter-spacing:1.1px;color:#858e98;margin:14px 5px 7px}.tool{width:100%;height:38px;text-align:left;margin:2px 0;padding-left:12px;border-color:transparent;background:transparent;box-shadow:none}.tool:hover{background:#34393f}.tool.active{background:#3a3328;color:#ffb348;border-color:#62471f;box-shadow:inset 3px 0 var(--accent)}
 #side label{display:flex;align-items:center;gap:7px;padding:8px 7px;font-size:12px;color:#d2d6da}#side input{accent-color:var(--accent)}
 #side small{display:block;color:#939ba4;line-height:1.75;padding:5px 7px;border:1px solid #373c41;border-radius:6px;background:#1e2124}
-#stage{position:relative;flex:1;min-width:0;background:#151719;overflow:hidden}canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair}
+#stage{position:relative;flex:1;min-width:0;background:#151719;overflow:hidden}#map{position:absolute;inset:0;z-index:0;display:none;background:#111}.leaflet-container{background:#111}.leaflet-control-attribution{font-size:9px!important}#mapnote{display:none;position:absolute;right:12px;top:38px;z-index:4;background:#202327dd;border:1px solid #4a5057;border-radius:4px;padding:5px 8px;font-size:10px;color:#d9dde1;pointer-events:none}#stage.map-on #map,#stage.map-on #mapnote{display:block}#stage.map-on canvas{background:transparent}#stage.map-on:before{z-index:4}canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;z-index:2}
 #stage:before{content:"MODEL";position:absolute;right:12px;top:10px;z-index:1;font-size:10px;font-weight:800;letter-spacing:1px;color:#69717a;border:1px solid #343940;border-radius:4px;padding:4px 7px;pointer-events:none}
 #hint{position:absolute;left:14px;bottom:14px;background:#202327e8;border:1px solid #444a50;border-left:3px solid var(--accent);padding:8px 11px;border-radius:4px;font-size:11px;color:#dce0e4;box-shadow:0 4px 14px #0007;pointer-events:none}
 #status{height:27px;flex:0 0 27px;background:#292d31;border-top:1px solid #3d4247;display:flex;align-items:center;gap:0;padding:0 8px;font-size:11px;color:#c5cbd1;z-index:5}
 #status span{height:100%;display:flex;align-items:center;padding:0 14px;border-right:1px solid #3e4348}#mode{color:#ffad36;font-weight:700}#xy{font-variant-numeric:tabular-nums;min-width:205px}
 kbd{background:#444;padding:2px 5px;border-radius:3px}
 @media(max-width:760px){#top{height:50px;padding:5px}.brand{height:36px;font-size:12px;padding-right:9px}.btn{height:32px;padding:0 9px}#side{width:54px;flex-basis:54px;padding:4px}#side>b,.section,#side label,#side small{display:none}.tool{font-size:0;height:42px;text-align:center;padding:0}.tool:first-letter{font-size:18px}.tool:after{font-size:17px}.tool[data-tool="select"]:after{content:"↖"}.tool[data-tool="point"]:after{content:"•"}.tool[data-tool="line"]:after{content:"╱"}.tool[data-tool="poly"]:after{content:"▱"}#status span{padding:0 7px}#xy{min-width:auto}#count{display:none}}
-</style></head>
+</style><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
+</head>
 <body>
 <div id="top"><div class="brand">ONLINE CAD</div>
 <button class="btn" data-tool="select">Seç</button><button class="btn" data-tool="point">Nokta</button>
 <button class="btn" data-tool="line">Çizgi</button><button class="btn" data-tool="poly">Poligon</button>
-<button class="btn" id="undo">↶ Geri</button><button class="btn" id="redo">↷ İleri</button><button class="btn" id="fit">Ekrana Sığdır</button><button class="btn" id="clear">Temizle</button></div>
+<button class="btn" id="sat">🛰 Uydu</button><button class="btn" id="wms">▦ Pafta WMS</button><button class="btn" id="undo">↶ Geri</button><button class="btn" id="redo">↷ İleri</button><button class="btn" id="fit">Ekrana Sığdır</button><button class="btn" id="clear">Temizle</button></div>
 <div id="wrap"><aside id="side"><b>Çizim</b><div class="section">ARAÇLAR</div>
 <button class="btn tool" data-tool="select">↖ Seçim</button><button class="btn tool" data-tool="point">• Nokta</button>
 <button class="btn tool" data-tool="line">╱ Çizgi</button><button class="btn tool" data-tool="poly">▱ Poligon</button>
 <div class="section">YAKALAMA</div><label><input id="snap" type="checkbox" checked> Uç / köşe yakala</label>
 <div class="section">KULLANIM</div><small>Orta tuş: kaydır<br>Tekerlek: zoom<br>ESC: komutu iptal<br>Sağ tık: çizimi bitir<br>Delete: seçileni sil</small></aside>
-<main id="stage"><canvas id="c"></canvas><div id="hint">Hazır</div></main></div>
+<main id="stage"><div id="map"></div><canvas id="c"></canvas><div id="mapnote">HARİTA ALTIĞI</div><div id="hint">Hazır</div></main></div>
 <div id="status"><span id="mode">Komut: SEÇ</span><span id="xy">X: 0.000 &nbsp; Y: 0.000</span><span id="scale">Zoom: 100%</span><span id="count">Nesne: 0</span></div>
 <script>
 const c=document.querySelector('#c'),ctx=c.getContext('2d'),stage=document.querySelector('#stage');
@@ -63,5 +65,23 @@ document.querySelector('#undo').onclick=()=>{if(!undoStack.length)return;redoSta
 document.querySelector('#redo').onclick=()=>{if(!redoStack.length)return;undoStack.push(state());restore(redoStack.pop())};
 document.querySelector('#clear').onclick=()=>{if(objects.length){checkpoint();objects=[];selected=null;draw()}};
 document.querySelector('#fit').onclick=()=>{let pts=objects.flatMap(o=>o.pts);if(!pts.length){view={x:0,y:0,s:1};draw();return}let xs=pts.map(p=>p.x),ys=pts.map(p=>p.y),minx=Math.min(...xs),maxx=Math.max(...xs),miny=Math.min(...ys),maxy=Math.max(...ys);view.s=Math.min((W-80)/Math.max(1,maxx-minx),(H-80)/Math.max(1,maxy-miny));view.x=-(minx+maxx)/2*view.s;view.y=(miny+maxy)/2*view.s;draw()};
+let map=null,satLayer=null,wmsLayer=null,mapMode=false,wmsOn=false;
+function initMap(){
+ if(map)return;
+ map=L.map('map',{zoomControl:true,attributionControl:true}).setView([39,35],6);
+ satLayer=L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{maxZoom:21,attribution:'Uydu © Google'}).addTo(map);
+ wmsLayer=L.tileLayer.wms('https://tucbs-public-api.csb.gov.tr/pafta_lejand_wms',{layers:'0',format:'image/png',transparent:true,version:'1.1.1',opacity:.9});
+}
+document.querySelector('#sat').onclick=()=>{
+ initMap();mapMode=!mapMode;stage.classList.toggle('map-on',mapMode);document.querySelector('#sat').classList.toggle('active',mapMode);
+ document.querySelector('#mapnote').textContent=mapMode?(wmsOn?'GOOGLE UYDU + PAFTA WMS':'GOOGLE UYDU'):'HARİTA ALTIĞI';
+ if(mapMode){setTimeout(()=>map.invalidateSize(),50);document.querySelector('#hint').textContent='Uydu altlığı açık • CAD çizimleri üst katmanda';}
+ draw();
+};
+document.querySelector('#wms').onclick=()=>{
+ initMap();if(!mapMode){mapMode=true;stage.classList.add('map-on');document.querySelector('#sat').classList.add('active');setTimeout(()=>map.invalidateSize(),50)}
+ wmsOn=!wmsOn;if(wmsOn)wmsLayer.addTo(map);else map.removeLayer(wmsLayer);
+ document.querySelector('#wms').classList.toggle('active',wmsOn);document.querySelector('#mapnote').textContent=wmsOn?'GOOGLE UYDU + PAFTA WMS':'GOOGLE UYDU';
+};
 setTool('select');resize();
 </script></body></html>
