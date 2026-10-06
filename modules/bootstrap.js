@@ -11,4 +11,5 @@ window.OnlineCADLoadModule=function(src){return new Promise(resolve=>{const s=do
  await OnlineCADLoadModule("modules/measurement-pro.js?v=1");
  await OnlineCADLoadModule("modules/snap-pro.js?v=1");
  await OnlineCADLoadModule("modules/vertex-tools.js?v=1");
+ await OnlineCADLoadModule("modules/dxf-io.js?v=1");
 })();
