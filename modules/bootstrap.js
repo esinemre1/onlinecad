@@ -8,4 +8,5 @@ window.OnlineCADLoadModule=function(src){return new Promise(resolve=>{const s=do
  await OnlineCADLoadModule("modules/line-editing.js?v=2");
  await OnlineCADLoadModule("modules/point-manager.js?v=1");
  await OnlineCADLoadModule("modules/project-io.js?v=1");
+ await OnlineCADLoadModule("modules/measurement-pro.js?v=1");
 })();
