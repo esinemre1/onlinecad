@@ -4,6 +4,7 @@ window.OnlineCADLoadModule=function(src){return new Promise(resolve=>{const s=do
 (async()=>{
  await OnlineCADLoadModule("modules/drawing-tools.js?v=2");
  await OnlineCADLoadModule("modules/drawing-live.js?v=2");
+ await OnlineCADLoadModule("modules/drawing-display.js?v=1");
  await OnlineCADLoadModule("modules/survey-drawing.js?v=2");
  await OnlineCADLoadModule("modules/survey-geometry.js?v=2");
  await OnlineCADLoadModule("modules/line-editing.js?v=2");
