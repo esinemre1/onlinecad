@@ -2,6 +2,7 @@
 window.OnlineCADExtensions=window.OnlineCADExtensions||{};
 window.OnlineCADLoadModule=function(src){return new Promise(resolve=>{const s=document.createElement("script");s.src=src;s.async=false;s.onload=()=>resolve({src,ok:true});s.onerror=()=>{console.warn("OnlineCAD module skipped:",src);resolve({src,ok:false})};document.head.appendChild(s)})};
 (async()=>{
+ await OnlineCADLoadModule("modules/ribbon-sync.js?v=1");
  await OnlineCADLoadModule("modules/drawing-tools.js?v=2");
  await OnlineCADLoadModule("modules/drawing-live.js?v=2");
  await OnlineCADLoadModule("modules/drawing-display.js?v=2");
@@ -15,4 +16,5 @@ window.OnlineCADLoadModule=function(src){return new Promise(resolve=>{const s=do
  await OnlineCADLoadModule("modules/snap-pro.js?v=2");
  await OnlineCADLoadModule("modules/vertex-tools.js?v=2");
  await OnlineCADLoadModule("modules/dxf-io.js?v=2");
+ window.dispatchEvent(new Event("onlinecad:modules-ready"));
 })();
